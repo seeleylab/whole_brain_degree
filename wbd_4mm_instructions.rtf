@@ -1,0 +1,54 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1347\cocoasubrtf570
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww16480\viewh8320\viewkind0
+\deftab720
+\pard\pardeftab720
+
+\f0\b\fs24 \cf0 \expnd0\expndtw0\kerning0
+subjs
+\b0 ="/data6/controlNIC/17248/17248_20131219/rsfmri\
+/data6/controlNIC/17248/17248_20131219/rsfmri"\
+
+\b \
+# to get 4d fmri files
+\b0 \
+for s in $subjs\
+do\
+if [ ! -e $s/processedfmri_TRCNnSFmDI/images/merged_swua.nii ]\
+then\
+q.sh fslmerge -t $s/processedfmri_TRCNnSFmDI/images/merged_swua `ls $s/processedfmri_TRCNnSFmDI/images/swua_filteredf_*.nii`\
+fi\
+done\
+\
+
+\b # to downsample 4d fmri files to 4mm resolution
+\b0 \
+for s in $subjs\
+do\
+q.sh flirt -nosearch -in $s/processedfmri_TRCNnSFmDI/images/merged_swua.nii -ref /data/mridata/jbrown/brains/MNI152_T1_4mm_brain -applyxfm -init /data/mridata/jbrown/brains/ident.mat -out $s/processedfmri_TRCNnSFmDI/images/merged_swua_4mm\
+done\
+\
+
+\b # to calculate whole brain degree for each subject
+\b0 \
+for s in $subjs\
+do\
+\
+if [ ! -d $\{s\}/processedfmri_TRCNnSFmDI/whole_brain_degree ]\
+then\
+mkdir $\{s\}/processedfmri_TRCNnSFmDI/whole_brain_degree\
+fi\
+\
+fmri_file=$\{s\}/processedfmri_TRCNnSFmDI/images/merged_swua_4mm.nii\
+\
+out_file=$\{s\}/processedfmri_TRCNnSFmDI/whole_brain_degree/whole_brain_degree.nii.gz\
+\
+nuisance_file=$\{s\}/processedfmri_TRCNnSFmDI/stats_FC_Boxer_DMidbrainTeg_sphere_3-5_-15_-8_roi/timeseries/nuisance_regressors_32.txt\
+\
+mask_file=/data/mridata/jbrown/brains/merged_ho_cereb_stn_max_bin_4mm.nii\
+\
+/data/mridata/jbrown/psp_nc/whole_brain_degree/run_wbd.py $fmri_file $out_file $nuisance_file $mask_file\
+echo $s\
+\
+done}

@@ -49,6 +49,12 @@ def whole_brain_degree(fmri_file,out_file=None,nuisance_file=False,mask_file=Fal
     # calculate voxelwise correlation matrix
     r_mat = np.zeros((n_vox,n_vox))
     if nuisance_file:
+        
+        with open(nuisance_file) as infile: 
+            with open(os.path.split(nuisance_file)[0]+'/nuisance_regressors_32.txt', 'w') as outfile:
+                [outfile.write('   '.join(line.split()[1:])+'\n') for line in infile]
+        nuisance_file = os.path.split(nuisance_file)[0]+'/nuisance_regressors_32.txt'
+        
         nuis_reg = np.array(core.file_reader(nuisance_file)).T
         input_d_flat_trim_res = np.zeros((input_d_flat_trim.shape))
         for i in range(len(input_d_flat_trim)):
@@ -56,6 +62,7 @@ def whole_brain_degree(fmri_file,out_file=None,nuisance_file=False,mask_file=Fal
             reg = np.linalg.lstsq(nuis_reg.T,ts.T) # regress out nuisance parameters
             beta = reg[0]
             input_d_flat_trim_res[i,:] = np.squeeze(ts.T - nuis_reg.T.dot(beta)) # store residuals
+                                                    #ts data - #variance in voxel's ts explained by nuisance params = #residuals           
         del(input_d_flat_trim)
         r_mat = np.corrcoef(input_d_flat_trim_res)
     else:
